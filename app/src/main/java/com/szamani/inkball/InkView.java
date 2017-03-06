@@ -6,7 +6,9 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Display;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.graphics.drawable.Drawable;
@@ -19,20 +21,23 @@ import android.widget.TextView;
 import java.util.LinkedList;
 import java.util.Random;
 
+import static java.lang.Math.abs;
+
 
 /**
  * Created by Sajjad on 1/20/2017.
  */
 
 public class InkView extends SurfaceView implements SurfaceHolder.Callback {
+
+
     class InkThread extends Thread {
 
 
 
         private int ballRadius = 80;
-        private float xOffset;
-        private int xPosBall=100;
-        private int yPosBall=-50;
+        private int xPosBall= 0;
+        private int yPosBall= -ballRadius;
         private Paint ballPaint;
 
         private int canvasWidth=1;
@@ -40,10 +45,9 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
         private int screenH;
         private int screenL;
 
-        long timeNow;
         long timePrev = 0;
         long timePrevFrame = 0;
-        long timeDelta;
+        long timeNow = 0;
 
         private LinkedList<Point> ballCoords = new LinkedList();
 
@@ -56,7 +60,9 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
         private  Drawable shooter;
         private int shooterH=80;
         private int shooterL=80;
-        private int shooterXPos=680;
+        private double shooterXPos=400.00;
+        private boolean touch = false;
+        private double touchX = screenL / 2;
 
         public InkThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
             mSurfaceHolder = surfaceHolder;
@@ -66,6 +72,7 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
             ballPaint.setColor(Color.BLACK);
             shooter = currContext.getResources().getDrawable(R.drawable.shooter);
 
+            //get display size of device
             WindowManager wm = (WindowManager) currContext.getSystemService(Context.WINDOW_SERVICE);
             Display display = wm.getDefaultDisplay();
             Point size = new Point();
@@ -79,35 +86,89 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
 
 
         public void draw(Canvas canvas) {
-            canvas.drawColor(-1); // white background
-
+            canvas.drawColor(Color.WHITE);
             for(Point p : ballCoords) {
                 canvas.drawCircle(p.x, p.y, ballRadius, ballPaint);
             }
-            Random rand = new Random();
-            int value = rand.nextInt(8);
-            xPosBall+=170*value;
-            canvas.drawCircle(xPosBall, yPosBall, ballRadius, ballPaint);
+            timeNow = System.currentTimeMillis();
+            if (timeNow - timePrevFrame > 300) {
+                Random rand = new Random();
+                int value = rand.nextInt(screenL - 2 * ballRadius) + ballRadius;
+                xPosBall = value;
+                canvas.drawCircle(xPosBall, yPosBall, ballRadius, ballPaint);
+                timePrevFrame = System.currentTimeMillis();
                 ballCoords.add(new Point(xPosBall, yPosBall));
-            xPosBall=100;
+                xPosBall = 0;
+            }
 
-            shooter.setBounds(shooterXPos,screenH-shooterH,shooterXPos+shooterL,screenH);
+            shooter.setBounds((int)shooterXPos,screenH-shooterH,(int)shooterXPos+shooterL,screenH);
             shooter.draw(canvas);
         }
 
-        public void updatePosition(){
-            if(!ballCoords.isEmpty()) {
-                for (Point p : ballCoords) {
-                    p.y += 180;
-                }
-                if(ballCoords.getFirst().y>=2480){
-                    running=false;
+        public boolean onTouch(MotionEvent event){
+            int action = event.getAction();
+
+            synchronized (mSurfaceHolder){
+                if(action == MotionEvent.ACTION_DOWN){
+                    touchX = event.getX();
+                    touch = true;
+                    Log.d("hasTouched","touched");
+                    return  true;
+                }else if(action == MotionEvent.ACTION_UP){
+                    touch = false;
+                    return false;
                 }
             }
-            shooterXPos+=20;
+            return false;
         }
 
-        public void pause() {
+        public void moveShooter() {
+            if (touch == true) {
+                if (touchX > screenL / 2) {
+                    if (shooterXPos + 40 < screenL) {
+                        shooterXPos += 40;
+                    }
+                } else if (touchX < screenL / 2) {
+                    if (shooterXPos - 40 > 0) {
+                        shooterXPos -= 40;
+                    }
+                }
+            }
+        }
+
+
+        public void updatePosition(){
+            int offset = 16;
+            if(!ballCoords.isEmpty()) {
+                for (Point p : ballCoords) {//collision with shooter
+                    if (p.y + ballRadius  >= screenH - shooterH + offset) {
+                        if (p.x - ballRadius + offset <= shooterXPos + shooterL  && p.x +  ballRadius - offset  >= shooterXPos ) {
+                            running = false;
+                            Log.d("ball","hit");
+                            return;
+                        }
+                    }
+                    p.y +=180;
+                }
+                //out of screen
+                if(ballCoords.getFirst().y + ballRadius >=screenH){
+                    ballCoords.removeFirst();
+                }
+            }
+            moveShooter();
+        }
+
+
+
+        public void destroyShooter(){
+
+        }
+
+        public void eraseBall(){
+
+        }
+
+        public void pause(){
             synchronized (mSurfaceHolder) {
                 //set state pause
             }
@@ -132,6 +193,7 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
         public void run() {
             while (running) {
                 Canvas canvas = null;
+                /*
                 timeNow=System.currentTimeMillis();
                 timeDelta=timeNow-timePrevFrame;
                 if ( timeDelta < 16) {
@@ -142,12 +204,18 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
 
                     }
                 }
-                timePrevFrame=System.currentTimeMillis();
+                timePrevFrame=System.currentTimeMillis();*/
                 try {
                     canvas=mSurfaceHolder.lockCanvas(null);
                     synchronized (mSurfaceHolder){
                         updatePosition();
                         draw(canvas);
+                        try {
+                            Thread.sleep(35);
+                        }
+                        catch(InterruptedException e) {
+
+                        }
                     }
                 }finally {
                     if(canvas!=null)
@@ -178,6 +246,11 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
 
     public InkThread getThread(){
         return thread;
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event){
+        return thread.onTouch(event);
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
