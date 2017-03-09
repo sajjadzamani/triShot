@@ -12,12 +12,9 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.os.Message;
 import android.util.AttributeSet;
-import android.view.KeyEvent;
 import android.view.WindowManager;
-import android.widget.TextView;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -45,11 +42,11 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
         private int screenH;
         private int screenL;
 
-        long timePrev = 0;
         long timePrevFrame = 0;
         long timeNow = 0;
 
         private LinkedList<Point> ballCoords = new LinkedList();
+        private LinkedList<Point> shotCoords = new LinkedList();
 
         private boolean running =true;
         private final Object mRunLock = new Object();
@@ -58,11 +55,17 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
         private Handler msgHandler;
 
         private  Drawable shooter;
-        private int shooterH=80;
-        private int shooterL=80;
+        private final int shooterH = 100;
+        private final int shooterL= 100;
         private double shooterXPos=400.00;
         private boolean touch = false;
         private double touchX = screenL / 2;
+
+        private Drawable shot;
+        private final int initShotY = 0;
+        private final int shotH = 25;
+        private final int shotL = 25;
+
 
         public InkThread(SurfaceHolder surfaceHolder, Context context, Handler handler) {
             mSurfaceHolder = surfaceHolder;
@@ -71,13 +74,15 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
             ballPaint = new Paint();
             ballPaint.setColor(Color.BLACK);
             shooter = currContext.getResources().getDrawable(R.drawable.shooter);
+            shot = currContext.getResources().getDrawable(R.drawable.shot2);
 
             //get display size of device
             WindowManager wm = (WindowManager) currContext.getSystemService(Context.WINDOW_SERVICE);
             Display display = wm.getDefaultDisplay();
             Point size = new Point();
             display.getRealSize(size);
-            screenH=size.y;
+            //180 offset added for buttons
+            screenH=size.y - 180;
             screenL=size.x;
             //add resourrces
             //initialize paints
@@ -87,9 +92,11 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
 
         public void draw(Canvas canvas) {
             canvas.drawColor(Color.WHITE);
-            for(Point p : ballCoords) {
+            for (Point p : ballCoords) {
                 canvas.drawCircle(p.x, p.y, ballRadius, ballPaint);
             }
+
+
             timeNow = System.currentTimeMillis();
             if (timeNow - timePrevFrame > 300) {
                 Random rand = new Random();
@@ -100,9 +107,21 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
                 ballCoords.add(new Point(xPosBall, yPosBall));
                 xPosBall = 0;
             }
-
-            shooter.setBounds((int)shooterXPos,screenH-shooterH,(int)shooterXPos+shooterL,screenH);
+            shooter.setBounds((int) shooterXPos, screenH - shooterH, (int) shooterXPos + shooterL, screenH);
+            shotCoords.add(new Point((int) shooterXPos, initShotY));
             shooter.draw(canvas);
+
+
+            for(Point p : shotCoords){
+                shot.setBounds(p.x + shotL ,
+                        screenH - shooterH - shotH - p.y,
+                        p.x + shooterL - shotL ,
+                        screenH -shooterH + shotH - p.y);
+                p.y=p.y+80;
+                shot.draw(canvas);
+            }
+
+
         }
 
         public boolean onTouch(MotionEvent event){
@@ -137,15 +156,20 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
         }
 
 
+        public void shoot(Canvas canvas){
+
+        }
+
+
         public void updatePosition(){
             int offset = 16;
             if(!ballCoords.isEmpty()) {
                 for (Point p : ballCoords) {//collision with shooter
                     if (p.y + ballRadius  >= screenH - shooterH + offset) {
                         if (p.x - ballRadius + offset <= shooterXPos + shooterL  && p.x +  ballRadius - offset  >= shooterXPos ) {
-                            running = false;
-                            Log.d("ball","hit");
-                            return;
+                           // running = false;
+                            //Log.d("ball","hit");
+                            //return;
                         }
                     }
                     p.y +=180;
@@ -211,7 +235,7 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
                         updatePosition();
                         draw(canvas);
                         try {
-                            Thread.sleep(35);
+                            Thread.sleep(20);
                         }
                         catch(InterruptedException e) {
 
@@ -278,4 +302,5 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
     }
+
 }

@@ -5,10 +5,27 @@
     android:id="@+id/mainFrame"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@color/white">
+    android:background="@color/black">
 
     <com.szamani.inkball.InkView
         android:id="@+id/inkball"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" />
+        android:layout_height="680dp"/>
+
+    <Button
+        android:id="@+id/btnRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Right"
+        android:layout_marginTop="680dp"
+        android:layout_marginLeft="330dp" />
+
+    <Button
+        android:id="@+id/btnLeft"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:text="Left"
+        android:layout_marginTop="680dp" />
+
+
 </FrameLayout>
