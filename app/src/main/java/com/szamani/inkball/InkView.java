@@ -15,7 +15,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.view.WindowManager;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 import static java.lang.Math.abs;
@@ -42,11 +46,14 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
         private int screenH;
         private int screenL;
 
-        long timePrevFrame = 0;
-        long timeNow = 0;
+        private long timePrevFrame = 0;
+        private long timeNow = 0;
+        private final long shotDelay = 800;
+        private long pastShot = 0;
+        private int numShotsDrawn =0;
 
         private LinkedList<Point> ballCoords = new LinkedList();
-        private LinkedList<Point> shotCoords = new LinkedList();
+        private ArrayList<Point> shotCoords = new ArrayList<>();
 
         private boolean running =true;
         private final Object mRunLock = new Object();
@@ -62,7 +69,7 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
         private double touchX = screenL / 2;
 
         private Drawable shot;
-        private final int initShotY = 0;
+        private  int initShotY ;
         private final int shotH = 25;
         private final int shotL = 25;
 
@@ -84,6 +91,7 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
             //180 offset added for buttons
             screenH=size.y - 180;
             screenL=size.x;
+            initShotY =  screenH - shooterH;
             //add resourrces
             //initialize paints
 
@@ -97,27 +105,41 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
             }
 
 
-            timeNow = System.currentTimeMillis();
+            timeNow = System.currentTimeMillis() - 20;
             if (timeNow - timePrevFrame > 300) {
                 Random rand = new Random();
-                int value = rand.nextInt(screenL - 2 * ballRadius) + ballRadius;
-                xPosBall = value;
-                canvas.drawCircle(xPosBall, yPosBall, ballRadius, ballPaint);
-                timePrevFrame = System.currentTimeMillis();
-                ballCoords.add(new Point(xPosBall, yPosBall));
-                xPosBall = 0;
+                xPosBall = rand.nextInt(screenL - 2 * ballRadius) + ballRadius;
+                yPosBall = - (rand.nextInt(500) + ballRadius);
+
+                if(ballCoords.isEmpty() || ballCoords.getLast().y > 100){
+                    canvas.drawCircle(xPosBall, yPosBall, ballRadius, ballPaint);
+                    timePrevFrame = System.currentTimeMillis();
+                    ballCoords.add(new Point(xPosBall, yPosBall));
+                    xPosBall = 0;
+                }
             }
             shooter.setBounds((int) shooterXPos, screenH - shooterH, (int) shooterXPos + shooterL, screenH);
-            shotCoords.add(new Point((int) shooterXPos, initShotY));
             shooter.draw(canvas);
+            //add 3 shots
+            if(pastShot == 0){
+                shotCoords.add(new Point((int) shooterXPos + shotL, initShotY));
+                numShotsDrawn++;
+                pastShot = timeNow;
+            }else if(numShotsDrawn % 3 != 0) {
+                shotCoords.add(new Point((int) shooterXPos + shotL, initShotY));
+                numShotsDrawn++;
+                pastShot = timeNow;
+            }else if(timeNow - pastShot > shotDelay){
+                pastShot = 0;
+            }
 
-
+            //Redraw prev and new shots
             for(Point p : shotCoords){
-                shot.setBounds(p.x + shotL ,
-                        screenH - shooterH - shotH - p.y,
-                        p.x + shooterL - shotL ,
-                        screenH -shooterH + shotH - p.y);
-                p.y=p.y+80;
+                shot.setBounds(p.x ,
+                        p.y - shotH ,
+                        p.x +  2*shotL ,
+                        p.y + shotH );
+                p.y=p.y-80;
                 shot.draw(canvas);
             }
 
@@ -131,7 +153,7 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
                 if(action == MotionEvent.ACTION_DOWN){
                     touchX = event.getX();
                     touch = true;
-                    Log.d("hasTouched","touched");
+                    //Log.d("hasTouched","touched");
                     return  true;
                 }else if(action == MotionEvent.ACTION_UP){
                     touch = false;
@@ -163,29 +185,55 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
 
         public void updatePosition(){
             int offset = 16;
+            checkCollision();
             if(!ballCoords.isEmpty()) {
                 for (Point p : ballCoords) {//collision with shooter
-                    if (p.y + ballRadius  >= screenH - shooterH + offset) {
-                        if (p.x - ballRadius + offset <= shooterXPos + shooterL  && p.x +  ballRadius - offset  >= shooterXPos ) {
-                           // running = false;
+                    if (p.y + ballRadius >= screenH - shooterH + offset) {
+                        if (p.x - ballRadius + offset <= shooterXPos + shooterL && p.x + ballRadius - offset >= shooterXPos) {
+                            running = false;
                             //Log.d("ball","hit");
-                            //return;
+                            return;
                         }
                     }
-                    p.y +=180;
+                    p.y += 20;
                 }
+
                 //out of screen
                 if(ballCoords.getFirst().y + ballRadius >=screenH){
                     ballCoords.removeFirst();
                 }
+
+
             }
             moveShooter();
         }
 
 
 
-        public void destroyShooter(){
-
+        public void checkCollision(){
+            int offset = 16;
+            int size = shotCoords.size();
+            if(!ballCoords.isEmpty() && shotCoords.size()>=3) {
+                for (Iterator<Point> it = ballCoords.iterator(); it.hasNext();) {
+                    Point ball = it.next();
+                    for (int i = 0; i < size; i++) {
+                        if (ball.x - ballRadius - offset <= shotCoords.get(i).x + shotL
+                                && ball.x + ballRadius - offset >= shotCoords.get(i).x
+                                && abs(shotCoords.get(i).y - ball.y) < 60) {
+                            shotCoords.remove(i);
+                            i--;
+                            size = shotCoords.size();
+                            //Log.d("Collision","TRUE");
+                            try {
+                                it.remove();
+                            }catch (IllegalStateException ex){
+                                if(it.hasNext())
+                                it.next();
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public void eraseBall(){
