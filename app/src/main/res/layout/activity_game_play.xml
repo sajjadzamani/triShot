@@ -5,27 +5,56 @@
     android:id="@+id/mainFrame"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@color/black">
+    android:background="#000000">
+
 
     <com.szamani.inkball.InkView
         android:id="@+id/inkball"
         android:layout_width="fill_parent"
-        android:layout_height="680dp"/>
-
-    <Button
-        android:id="@+id/btnRight"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Right"
-        android:layout_marginTop="680dp"
-        android:layout_marginLeft="330dp" />
+        android:layout_height="600dp"
+        />
 
     <Button
         android:id="@+id/btnLeft"
+        android:text="@string/btnLeft"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:text="Left"
-        android:layout_marginTop="680dp" />
+        android:layout_marginTop="2380px"
+        android:visibility="visible"
+        />
+
+    <Button
+        android:id="@+id/btnRight"
+        android:text="@string/btnRight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="1110px"
+        android:layout_marginTop="2380px"
+        android:visibility="visible"/>
+
+     <Button
+         android:id="@+id/btnRetry"
+         android:text="@string/retry"
+         android:visibility="invisible"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         android:textColor="@color/colorAccent"
+         android:layout_marginLeft="510px"
+         android:layout_marginTop="1250px"
+         android:textSize="24sp"
+         android:gravity="top" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:text="@string/start"
+        android:textColor="@color/colorAccent"
+        android:visibility="visible"
+        android:layout_marginLeft="250px"
+        android:textSize="18sp"
+        android:layout_marginTop="1250px"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
 
 
 </FrameLayout>

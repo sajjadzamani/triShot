@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">InkBall</string>
+    <string name="btnRight">Right</string>
+    <string name="btnLeft">Left</string>
+    <string name="retry">Retry</string>
+    <string name="start">Press Right or Left to start</string>
 
 </resources>
