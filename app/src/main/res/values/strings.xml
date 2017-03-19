@@ -3,6 +3,6 @@
     <string name="btnRight">Right</string>
     <string name="btnLeft">Left</string>
     <string name="retry">Retry</string>
-    <string name="start">Press Right or Left to start</string>
+    <string name="start">TriShot \n Press Right or Left to start</string>
 
 </resources>

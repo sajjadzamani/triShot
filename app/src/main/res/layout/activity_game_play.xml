@@ -11,50 +11,49 @@
     <com.szamani.inkball.InkView
         android:id="@+id/inkball"
         android:layout_width="fill_parent"
-        android:layout_height="600dp"
+        android:layout_height="fill_parent"
         />
 
     <Button
         android:id="@+id/btnLeft"
         android:text="@string/btnLeft"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:layout_marginTop="2380px"
+        android:layout_height="50dp"
+        android:layout_width="80dp"
         android:visibility="visible"
-        />
+        android:layout_gravity="bottom|left"
+        android:alpha="180"/>
 
     <Button
         android:id="@+id/btnRight"
         android:text="@string/btnRight"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="1110px"
-        android:layout_marginTop="2380px"
-        android:visibility="visible"/>
+        android:layout_height="50dp"
+        android:layout_width="80dp"
+        android:visibility="visible"
+        android:layout_gravity="bottom|right"
+        android:alpha="180"/>
 
      <Button
          android:id="@+id/btnRetry"
          android:text="@string/retry"
-         android:visibility="invisible"
+         android:visibility="gone"
          android:layout_width="wrap_content"
          android:layout_height="wrap_content"
          android:textColor="@color/colorAccent"
-         android:layout_marginLeft="510px"
-         android:layout_marginTop="1250px"
          android:textSize="24sp"
-         android:gravity="top" />
+         android:gravity="center_horizontal"
+         android:alpha="255"
+         android:layout_gravity="center" />
 
     <TextView
         android:id="@+id/textView"
         android:text="@string/start"
         android:textColor="@color/colorAccent"
         android:visibility="visible"
-        android:layout_marginLeft="250px"
         android:textSize="18sp"
-        android:layout_marginTop="1250px"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        />
+        android:layout_gravity="center"
+        android:gravity="center" />
 
 
 </FrameLayout>

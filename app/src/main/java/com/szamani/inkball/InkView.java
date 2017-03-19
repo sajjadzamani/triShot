@@ -7,7 +7,6 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.Layout;
 import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -20,13 +19,10 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.NoSuchElementException;
 import java.util.Random;
-
 import static java.lang.Math.abs;
 
 
@@ -201,7 +197,7 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
 
 
         public void updatePosition(){
-            int offset = 16;
+            int offset = 20;
             checkCollision();
             if(!ballCoords.isEmpty()) {
                 for (Point p : ballCoords) {//collision with shooter
@@ -349,7 +345,7 @@ public class InkView extends SurfaceView implements SurfaceHolder.Callback {
             @Override
             public void handleMessage(Message m) {
                 btnRetry.setVisibility(m.getData().getInt("viz"));
-                btnRetry.setBackgroundColor(Color.BLACK);
+                btnRetry.getBackground().setAlpha(150);
             }
         });
         setFocusable(true);
